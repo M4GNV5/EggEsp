@@ -7,78 +7,116 @@ private:
 	Stepper& y;
 	int16_t posX;
 	int16_t posY;
-	bool drawing;
-	void (*switchFunc)(bool);
+	void (*setDrawing)(bool);
 
-	void move(int16_t dx, int16_t dy)
+	void rawMove(int16_t dx, int16_t dy)
 	{
-		bool xReverse = dx < 0 ? true : false;
-		bool yReverse = dy < 0 ? true : false;
+		if(dx == 0 && dy == 0)
+		{
+			return;
+		}
+		else if(dx == 0)
+		{
+			y.step(dy);
+			posY += dy;
+			return;
+		}
+		else if(dy == 0)
+		{
+			x.step(dx);
+			posX += dx;
+			return;
+		}
 
 		posX += dx;
 		posY += dy;
 
+		bool xReverse = dx < 0 ? true : false;
+		bool yReverse = dy < 0 ? true : false;
 		if(dx < 0)
 			dx = -dx;
 		if(dy < 0)
 			dy = -dy;
 
-		//TODO evenly distribute the smaller amount steps along the larger amount
+		Stepper *a;
+		Stepper *b;
+		int16_t da;
+		int16_t db;
+		bool aReverse;
+		bool bReverse;
 
-		while(dx > 0 || dy > 0)
+		if(dx < dy)
 		{
-			if(dx > 0)
+			a = &y;
+			b = &x;
+			da = dy;
+			db = dx;
+			aReverse = yReverse;
+			bReverse = xReverse;
+		}
+		else
+		{
+			a = &x;
+			b = &y;
+			da = dx;
+			db = dy;
+			aReverse = xReverse;
+			bReverse = yReverse;
+		}
+
+		//Bresenham algorithm
+		//constrains: 0 <= db/da <= 1 and da > 0 (thats why we put the smaller one in a above)
+
+		int16_t D = 2 * db - da;
+		int16_t deltaE = 2 * db;
+		int16_t deltaNE = 2 * (db - da);
+		while(da > 0)
+		{
+			if(D < 0)
 			{
-				x.singleStep(xReverse);
-				dx--;
+				D += deltaE;
 			}
-			if(dy > 0)
+			else
 			{
-				y.singleStep(yReverse);
-				dy--;
+				D += deltaNE;
+				b->singleStep(bReverse);
 			}
+
+			a->singleStep(aReverse);
+			da--;
 		}
 	}
 
 public:
 	Draw2D(Stepper& _x, Stepper& _y,
 		int16_t _posX, int16_t _posY,
-		void (*_switch)(bool)
+		void (*switchFunc)(bool)
 	)
-		: x(_x), y(_y), posX(_posX), posY(_posY), switchFunc(_switch)
+		: x(_x), y(_y), posX(_posX), posY(_posY), setDrawing(switchFunc)
 	{
 
-	}
-
-	inline void setDrawing(bool state)
-	{
-		if(drawing != state)
-		{
-			switchFunc(state);
-			drawing = state;
-		}
 	}
 
 	void moveTo(int16_t x, int16_t y)
 	{
 		setDrawing(false);
-		move(x - posX, y - posY);
+		rawMove(x - posX, y - posY);
 	}
-	void moveToRel(int16_t dx, int16_t dy)
+	void move(int16_t dx, int16_t dy)
 	{
 		setDrawing(false);
-		move(dx, dy);
+		rawMove(dx, dy);
 	}
 
 	void lineTo(int16_t x, int16_t y)
 	{
 		setDrawing(true);
-		move(x - posX, y - posY);
+		rawMove(x - posX, y - posY);
 	}
-	void lineToRel(int16_t dx, int16_t dy)
+	void line(int16_t dx, int16_t dy)
 	{
 		setDrawing(true);
-		move(dx, dy);
+		rawMove(dx, dy);
 	}
 
 	//TODO arcTo
