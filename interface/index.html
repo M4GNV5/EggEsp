@@ -1,0 +1,19 @@
+<html>
+	<head>
+		<style>
+			#image
+			{
+				display: none;
+			}
+		</style>
+	</head>
+	<body>
+		<input onchange="loadFile()" type="file" id="fileInput" />
+		<button onclick="genGcode()">Generate GCode</button>
+
+		<div id="image"></svg>
+
+		<script src="svg2gcode.js"></script>
+		<script src="ui.js"></script>
+	</body>
+</html>
