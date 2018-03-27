@@ -65,7 +65,7 @@ private:
 		}
 
 		//Bresenham algorithm
-		//constrains: 0 <= db/da <= 1 and da > 0 (thats why we put the smaller one in a above)
+		//constrains: 0 <= db/da <= 1 and da > 0 (thats why we put the smaller one in 'b' above)
 
 		int16_t D = 2 * db - da;
 		int16_t deltaE = 2 * db;

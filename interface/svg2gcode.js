@@ -74,8 +74,9 @@ function path2gcode(transform, path)
 		//TODO other ops (see https://svgwg.org/specs/paths/#PathElement)
 		else if(!isNaN(curr)) //assume L by default
 		{
+			let last = ret[ret.length - 1];
 			let op = {
-				op: OP_LINE_REL,
+				op: last.op == OP_MOVE || last.op == OP_LINE ? OP_LINE : OP_LINE_REL,
 				x: parseFloat(curr),
 				y: parseFloat(split.shift())
 			};
@@ -96,5 +97,5 @@ function path2gcode(transform, path)
 function parseTransform(text)
 {
 	//TODO
-	return [0, 0, 0, 0, 0, 0];
+	return null;
 }
