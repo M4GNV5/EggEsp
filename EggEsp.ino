@@ -42,7 +42,7 @@ Servo pen;
 
 Stepper x(D0, D2, D1, D3);
 Stepper y(D5, D7, D6, D8);
-Draw2D draw(x, y, 0, 0, togglePen);
+Draw2D draw(x, y, 0, 256, togglePen);
 
 struct instruction *instructions = NULL;
 uint16_t instruction_index;
