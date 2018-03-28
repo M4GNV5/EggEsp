@@ -5,10 +5,10 @@ const OP_LINE_REL = 4;
 //...
 
 const xyOps = {
-	"m": OP_MOVE,
-	"M": OP_MOVE_REL,
-	"l": OP_LINE,
-	"L": OP_LINE_REL
+	"M": OP_MOVE,
+	"m": OP_MOVE_REL,
+	"L": OP_LINE,
+	"l": OP_LINE_REL
 };
 
 function svg2gcode(transform, elements)
@@ -72,7 +72,7 @@ function path2gcode(transform, path)
 			ret.push(op);
 		}
 		//TODO other ops (see https://svgwg.org/specs/paths/#PathElement)
-		else if(!isNaN(curr)) //assume L by default
+		else if(!isNaN(curr)) //assume l/L by default
 		{
 			let last = ret[ret.length - 1];
 			let op = {

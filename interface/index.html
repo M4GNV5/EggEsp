@@ -8,12 +8,14 @@
 		</style>
 	</head>
 	<body>
-		<input onchange="loadFile()" type="file" id="fileInput" />
-		<button onclick="genGcode()">Generate GCode</button>
+		<input onchange="loadFile()" type="file" id="fileInput" /> SVG Dimensions: <span id="svgDimensions">?x?</span>
+		<br />
+		<button onclick="genGcode()">Generate Instructions</button> <span id="status"></span>
 
 		<div id="image"></svg>
 
 		<script src="svg2gcode.js"></script>
+		<script src="bytecode.js"></script>
 		<script src="ui.js"></script>
 	</body>
 </html>
