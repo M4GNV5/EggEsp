@@ -6,5 +6,5 @@ As I'm using an ESP8266 for controlling the steppers and the servos I couldn't u
 - WiFi (it's an ESP8266 after all)
 - webinterface for starting to print -> no need for an USB connection
 - taking svgs directly -> no need for external software
-- slowly rising/lowering the pen so we don't break the egg
+- slowly lowering the pen so we don't break the egg
 - ...

@@ -35,7 +35,7 @@ struct instruction
 void togglePen(bool);
 
 #define PEN_PIN D10
-#define PEN_DRAWING 110
+#define PEN_DRAWING 120
 #define PEN_MOVING 140
 bool penStatus;
 Servo pen;
@@ -54,25 +54,19 @@ void togglePen(bool status)
 {
 	if(status != penStatus)
 	{
-		uint8_t angle, target, step;
 		if(penStatus)
 		{
-			angle = PEN_DRAWING;
-			target = PEN_MOVING;
-			step = 2;
+			pen.write(PEN_MOVING);
 		}
 		else
 		{
-			angle = PEN_MOVING;
-			target = PEN_DRAWING;
-			step = -2;
-		}
-
-		while(angle != target)
-		{
-			angle += step;
-			pen.write(angle);
-			delay(50);
+			uint8_t angle = PEN_MOVING;
+			while(angle > PEN_DRAWING)
+			{
+				angle -= 2;
+				pen.write(angle);
+				delay(50);
+			}
 		}
 
 		penStatus = status;
