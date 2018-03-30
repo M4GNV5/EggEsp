@@ -144,6 +144,9 @@ function path2gcode(transform, path)
 		}
 
 		applyTransformation(transform, op);
+
+		if(isNaN(op.x) || isNaN(op.y))
+			throw "Oops, something went wrong!";
 		ret.push(op);
 	}
 

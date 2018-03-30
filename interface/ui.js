@@ -24,12 +24,21 @@ function loadFile()
 function genGcode()
 {
 	let svg = document.getElementsByTagName("svg")[0];
-	let ops = svg2gcode(null, Array.from(svg.children));
-	statusEl.innerHTML = "Generated " + ops.length + " instructions";
 
-	transformCoordinates(ops, svg.attributes.width.value, svg.attributes.height.value);
-	console.dir(ops);
-	ops = opsToBytecode(ops);
+	let ops;
+	try
+	{
+		ops = svg2gcode(null, Array.from(svg.children));
+		statusEl.innerHTML = "Generated " + ops.length + " instructions";
+
+		transformCoordinates(ops, svg.attributes.width.value, svg.attributes.height.value);
+		console.dir(ops);
+		ops = opsToBytecode(ops);
+	}
+	catch(e)
+	{
+		statusEl.innerHTML = e.toString();
+	}
 
 	let a = document.createElement("a");
 	a.style = "display: none";
