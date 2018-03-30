@@ -26,20 +26,20 @@ function svg2gcode(transform, elements)
 	let ret = [];
 	for(var curr of elements)
 	{
+		let _transform;
+		if(curr.attributes && curr.attributes.transform)
+			_transform = parseTransform(transform, curr.attributes.transform.value);
+		else
+			_transform = transform;
+
 		switch(curr.tagName)
 		{
 			case "g":
-				let _transform;
-				if(curr.attributes && curr.attributes.transform)
-					_transform = parseTransform(transform, curr.attributes.transform.value);
-				else
-					_transform = transform;
-
 				ret.push(svg2gcode(_transform, Array.from(curr.children)));
 				break;
 
 			case "path":
-				ret.push(path2gcode(transform, curr.attributes.d.value));
+				ret.push(path2gcode(_transform, curr.attributes.d.value));
 				break;
 
 			//TODO rect, polygon, ...
@@ -176,7 +176,7 @@ function parseTransform(transform, text)
 
 			case "translate":
 				x = parseFloat(split.shift());
-				y = isNaN(split[0]) ? x : parseFloat(split.shift());
+				y = isNaN(split[0]) ? 0 : parseFloat(split.shift());
 				matrix = [1, 0, x, 0, 1, y];
 				break;
 
@@ -238,7 +238,7 @@ function applyTransformation(transform, op)
 		let curr = transform;
 		while(curr)
 		{
-			result = matmul(transform.matrix, result);
+			result = matmul(curr.matrix, result);
 			curr = curr.prev;
 		}
 

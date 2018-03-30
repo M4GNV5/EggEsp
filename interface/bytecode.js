@@ -7,7 +7,7 @@ function transformCoordinates(ops, sourceWidth, sourceHeight)
 	for(op of ops)
 	{
 		op.x = op.x * targetWidth / sourceWidth;
-		op.y = op.y * targetHeight / sourceHeight;
+		op.y = targetHeight - op.y * targetHeight / sourceHeight;
 	}
 }
 
