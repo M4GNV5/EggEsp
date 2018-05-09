@@ -12,6 +12,10 @@
 #define LOGLN(msg)
 #endif
 
+#ifndef USE_WIFI
+#define input Serial
+#endif
+
 #define OP_MOVE 1
 #define OP_MOVE_REL 2
 #define OP_LINE 3
@@ -48,7 +52,9 @@ struct instruction *instructions = NULL;
 uint16_t instruction_index;
 uint16_t instruction_count = 0;
 
+#ifdef USE_WIFI
 WiFiServer server(1337);
+#endif
 
 void togglePen(bool status)
 {
@@ -75,7 +81,9 @@ void togglePen(bool status)
 
 void setup()
 {
+#if defined(USE_WIFI) || defined(DEBUG)
 	Serial.begin(115200);
+#endif
 
 	LOGLN("Initializing servo");
 	pen.attach(PEN_PIN, 1000, 2000);
@@ -88,13 +96,15 @@ void setup()
 	y.init();
 	y.setSpeed(100);
 
-	LOGLN("Initializing WiFi");
 	WiFi.persistent(false);
 	WiFi.mode(WIFI_OFF);
+#ifdef USE_WIFI
+	LOGLN("Initializing WiFi");
 	WiFi.mode(WIFI_STA);
 	WiFi.begin(WIFI_SSID, WIFI_PSK);
 
 	server.begin();
+#endif
 
 	togglePen(true);
 	delay(500);
@@ -143,15 +153,20 @@ void loop()
 		instructions = NULL;
 	}
 
-	WiFiClient client = server.available();
-	if(client)
+#ifdef USE_WIFI
+	WiFiClient input = server.available();
+	if(input)
 	{
 		LOGLN("Client connected");
-
+#else
+	if(Serial.available())
+	{
+		LOGLN("Data available...");
+#endif
 		struct header header;
-		if(client.readBytes((char *)&header, sizeof(struct header)) == sizeof(struct header))
+		if(input.readBytes((char *)&header, sizeof(struct header)) == sizeof(struct header))
 		{
-			LOG("Client sent header with instruction count ");
+			LOG("Received header with instruction count ");
 			LOGLN(header.instruction_count);
 
 			size_t size = sizeof(struct instruction) * header.instruction_count;
@@ -166,10 +181,10 @@ void loop()
 				LOG(size);
 				LOGLN(" bytes...");
 
-				client.write((uint8_t)0);
-				client.setTimeout(5000);
+				input.write((uint8_t)0);
+				input.setTimeout(5000);
 
-				if(client.readBytes((char *)instructions, size) != size)
+				if(input.readBytes((char *)instructions, size) != size)
 				{
 					LOGLN("Transmission error!");
 
@@ -184,6 +199,8 @@ void loop()
 			}
 		}
 
-		client.stop();
+#ifdef USE_WIFI
+		input.stop();
+#endif
 	}
 }

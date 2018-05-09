@@ -2,6 +2,7 @@
 
 //#define DEBUG
 
+#define USE_WIFI
 #define WIFI_SSID "<wifi ssid>"
 #define WIFI_PSK "<wifi password>"
 
