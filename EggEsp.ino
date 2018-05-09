@@ -1,8 +1,8 @@
 #include <ESP8266WiFi.h>
 #include <Servo.h>
+#include "./config.h"
 #include "./Stepper.hpp"
 #include "./Draw2D.hpp"
-#include "./config.h"
 
 #ifdef DEBUG
 #define LOG(msg) Serial.print(msg)
@@ -10,10 +10,6 @@
 #else
 #define LOG(msg)
 #define LOGLN(msg)
-#endif
-
-#ifndef USE_WIFI
-#define input Serial
 #endif
 
 #define OP_MOVE 1
@@ -40,7 +36,7 @@ void togglePen(bool);
 
 #define PEN_PIN D10
 #define PEN_DRAWING 120
-#define PEN_MOVING 140
+#define PEN_MOVING 160
 bool penStatus;
 Servo pen;
 
@@ -52,9 +48,7 @@ struct instruction *instructions = NULL;
 uint16_t instruction_index;
 uint16_t instruction_count = 0;
 
-#ifdef USE_WIFI
 WiFiServer server(1337);
-#endif
 
 void togglePen(bool status)
 {
@@ -81,7 +75,7 @@ void togglePen(bool status)
 
 void setup()
 {
-#if defined(USE_WIFI) || defined(DEBUG)
+#ifdef DEBUG
 	Serial.begin(115200);
 #endif
 
@@ -98,16 +92,21 @@ void setup()
 
 	WiFi.persistent(false);
 	WiFi.mode(WIFI_OFF);
-#ifdef USE_WIFI
-	LOGLN("Initializing WiFi");
-	WiFi.mode(WIFI_STA);
+	WiFi.mode(WIFI_MODE);
+
+#if WIFI_MODE == WIFI_AP
+	LOGLN("Initializing WiFi AP");
+	WiFi.softAP(WIFI_SSID, WIFI_PSK, WIFI_AP_CHANNEL, false);
+#elif WIFI_MODE == WIFI_STA
+	LOGLN("Initializing WiFi Station");
 	WiFi.begin(WIFI_SSID, WIFI_PSK);
-
-	server.begin();
 #endif
+	
+	server.begin();
 
+	delay(1000);
 	togglePen(true);
-	delay(500);
+	delay(1000);
 	togglePen(false);
 }
 
@@ -153,16 +152,10 @@ void loop()
 		instructions = NULL;
 	}
 
-#ifdef USE_WIFI
 	WiFiClient input = server.available();
 	if(input)
 	{
 		LOGLN("Client connected");
-#else
-	if(Serial.available())
-	{
-		LOGLN("Data available...");
-#endif
 		struct header header;
 		if(input.readBytes((char *)&header, sizeof(struct header)) == sizeof(struct header))
 		{
@@ -199,8 +192,6 @@ void loop()
 			}
 		}
 
-#ifdef USE_WIFI
 		input.stop();
-#endif
 	}
 }

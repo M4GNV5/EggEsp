@@ -15,7 +15,7 @@ private:
 		{
 			return;
 		}
-		else if(dx == 0)
+		/*else if(dx == 0)
 		{
 			y.step(dy);
 			posY += dy;
@@ -26,7 +26,7 @@ private:
 			x.step(dx);
 			posX += dx;
 			return;
-		}
+		}*/
 
 		posX += dx;
 		posY += dy;
