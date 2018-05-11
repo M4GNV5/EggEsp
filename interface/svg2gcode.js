@@ -251,3 +251,47 @@ function applyTransformation(transform, op)
 	op.x = transform.calculated[0] * op.x + transform.calculated[1] * op.y + transform.calculated[2];
 	op.y = transform.calculated[3] * op.x + transform.calculated[4] * op.y + transform.calculated[5];
 }
+
+function optimizePaths(ops)
+{
+	var x = NaN;
+	var y = NaN;
+	for(var i = 0; i < ops.length; i++)
+	{
+		var op = ops[i];
+		console.log(i, ops.length, op);
+
+		if(op.op == OP_MOVE && op.x == x && op.y == y) //remove noop moves
+		{
+			ops.splice(i, 1);
+			i -= 2;
+		}
+		else if(i > 0 && ops[i - 1].op == OP_MOVE && op.op == OP_MOVE) //optimize two moves to a single one
+		{
+			ops[i - 1].x = op.x;
+			ops[i - 1].y = op.y;
+			ops.splice(i, 1);
+			i -= 2;
+		}
+		else if(ops[i].op == OP_LINE) //optimize paths where the ends touch each other to a single movement
+		{
+			for(var j = 0; j < i; j++)
+			{
+				if(ops[j].op == OP_LINE && op.x == ops[j].x && op.y == ops[j].y)
+				{
+					var copy = Object.assign({}, op);
+					copy.x = x;
+					copy.y = y;
+
+					op.op = OP_MOVE;
+					ops.splice(j + 1, 0, copy);
+					i = j + 1;
+					break;
+				}
+			}
+		}
+
+		x = ops[i].x;
+		y = ops[i].y;
+	}
+}
