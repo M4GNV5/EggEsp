@@ -31,7 +31,7 @@ function genGcode()
 		ops = svg2gcode(null, Array.from(svg.children));
 		statusEl.innerHTML = "Generated " + ops.length + " instructions";
 
-		optimizePaths(ops);
+		//optimizePaths(ops);
 
 		transformCoordinates(ops, svg.attributes.width.value, svg.attributes.height.value);
 		console.dir(ops);
