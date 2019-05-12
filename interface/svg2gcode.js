@@ -70,51 +70,8 @@ function path2gcode(transform, path)
 	let y = 0;
 	let wasRelative = false;
 
-	while(split.length > 0)
+	function addOp(op)
 	{
-		let curr = split.shift();
-		let op;
-		if(xyOps.hasOwnProperty(curr))
-		{
-			op = {
-				op: xyOps[curr],
-				x: parseFloat(split.shift()),
-				y: parseFloat(split.shift())
-			};
-		}
-		else if(xy0Ops.hasOwnProperty(curr))
-		{
-			let xy0Op = xy0Ops[curr];
-			op = {op: xy0Op.op};
-			op[xy0Op.value] = parseFloat(split.shift());
-
-			if(isRelative(op.op))
-				op[xy0Op.unchanged] = 0;
-			else
-				op[xy0Op.unchanged] = xy0Op.unchanged == "x" ? x : y;
-		}
-		else if(curr == "z" || curr == "Z")
-		{
-			op = {
-				op: OP_LINE,
-				x: startX,
-				y: startY
-			};
-		}
-		//TODO other ops (see https://svgwg.org/specs/paths/#PathElement)
-		else if(!isNaN(curr)) //assume L/l by default
-		{
-			op = {
-				op: wasRelative ? OP_LINE_REL : OP_LINE,
-				x: parseFloat(curr),
-				y: parseFloat(split.shift())
-			};
-		}
-		else
-		{
-			throw "Invalid/Unsupported svg path character " + curr;
-		}
-
 		wasRelative = isRelative(op.op);
 
 		if(ret.length == 0 && wasRelative)
@@ -146,8 +103,86 @@ function path2gcode(transform, path)
 		applyTransformation(transform, op);
 
 		if(isNaN(op.x) || isNaN(op.y))
-			throw "Oops, something went wrong!";
+			throw new Error("Oops, something went wrong!");
 		ret.push(op);
+	}
+
+	while(split.length > 0)
+	{
+		let curr = split.shift();
+		if(xyOps.hasOwnProperty(curr))
+		{
+			addOp({
+				op: xyOps[curr],
+				x: parseFloat(split.shift()),
+				y: parseFloat(split.shift())
+			});
+		}
+		else if(xy0Ops.hasOwnProperty(curr))
+		{
+			let xy0Op = xy0Ops[curr];
+			while(!isNaN(split[0]))
+			{
+				let op = {op: xy0Op.op};
+				op[xy0Op.value] = parseFloat(split.shift());
+
+				if(isRelative(op.op))
+					op[xy0Op.unchanged] = 0;
+				else
+					op[xy0Op.unchanged] = xy0Op.unchanged == "x" ? x : y;
+
+				addOp(op);
+			}
+		}
+		else if(curr == "z" || curr == "Z")
+		{
+			addOp({
+				op: OP_LINE,
+				x: startX,
+				y: startY
+			});
+		}
+		else if(curr == "c" || curr == "C")
+		{
+			let points;
+			var endIndex = split.findIndex(x => isNaN(x));
+			if(endIndex == -1)
+			{
+				points = split;
+				split = [];
+			}
+			else
+			{
+				points = split.splice(0, endIndex);
+			}
+
+			points = points.map(x => parseFloat(x));
+
+			//TODO what is a good value for the second argument? Should we let the user define this?
+			points = GetBezierPoints(points, 20);
+
+			for(var i = 0; i < points.length; i += 2)
+			{
+				addOp({
+					op: OP_LINE,
+					x: points[i],
+					y: points[i + 1]
+				});
+			}
+		}
+		//TODO other ops (see https://svgwg.org/specs/paths/#PathElement)
+		else if(!isNaN(curr)) //assume L/l by default
+		{
+			addOp({
+				op: wasRelative ? OP_LINE_REL : OP_LINE,
+				x: parseFloat(curr),
+				y: parseFloat(split.shift())
+			});
+		}
+		else
+		{
+			throw "Invalid/Unsupported svg path character " + curr;
+		}
 	}
 
 	return ret;
